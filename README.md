@@ -12,4 +12,4 @@
 
 "Mentor":Neela Santhosh
 
-"output":
+"output": ![Image](https://github.com/user-attachments/assets/491566e8-98d1-44df-9302-3a4a2455ce00)
