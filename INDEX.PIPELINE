@@ -1,0 +1,66 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
+import joblib
+
+# -----------------------------
+# 1. Extract (Load sample data)
+# -----------------------------
+df = pd.read_csv('https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv')
+print("Original Data Sample:\n", df.head())
+
+# -----------------------------
+# 2. Preprocessing + Transform
+# -----------------------------
+# Drop columns not needed
+df = df.drop(columns=['deck', 'embark_town', 'alive', 'who', 'adult_male', 'class'])
+
+# Separate features and target
+X = df.drop('survived', axis=1)
+y = df['survived']
+
+# Define column types
+numeric_features = ['age', 'fare']
+categorical_features = ['sex', 'embarked']
+
+# Create preprocessing pipelines
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='mean')),
+    ('scaler', StandardScaler())
+])
+
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+
+# Combine into one ColumnTransformer
+preprocessor = ColumnTransformer(transformers=[
+    ('num', numeric_transformer, numeric_features),
+    ('cat', categorical_transformer, categorical_features)
+])
+
+# Full pipeline
+pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor)
+])
+
+# -----------------------------
+# 3. Fit & Transform the Data
+# -----------------------------
+X_processed = pipeline.fit_transform(X)
+print("\nTransformed Data Shape:", X_processed.shape)
+
+# -----------------------------
+# 4. Split and Save Processed Data
+# -----------------------------
+X_train, X_test, y_train, y_test = train_test_split(X_processed, y, test_size=0.2, random_state=42)
+
+# Save processed data
+joblib.dump((X_train, X_test, y_train, y_test), 'processed_data.pkl')
+joblib.dump(pipeline, 'data_pipeline.pkl')
+
+print("\n✅ ETL Pipeline Completed. Processed data saved as 'processed_data.pkl'")
